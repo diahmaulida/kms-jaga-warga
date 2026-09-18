@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <!-- Gradien Oranye Utama (Sesuai spesifikasi: #F97316 ke #EA580C) -->
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F97316" />
+      <stop offset="100%" stop-color="#EA580C" />
+    </linearGradient>
+    
+    <!-- Efek Bayangan Halus untuk Perisai -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Latar Belakang Kotak Rounded (Sudut Membulat rx=48) -->
+  <rect width="200" height="200" rx="48" fill="url(#g)"/>
+
+  <!-- Perisai Putih (Simbol Keamanan & Perlindungan) -->
+  <path d="M100 45 C125 45, 145 52, 145 52 C145 52, 145 95, 145 115 C145 138, 122 152, 100 160 C78 152, 55 138, 55 115 C55 95, 55 52, 55 52 C55 52, 75 45, 100 45 Z" 
+        fill="#FFFFFF" 
+        filter="url(#shadow)"/>
+
+  <!-- Tanda Centang (Warna Oranye) -->
+  <path d="M84 104 L96 116 L120 88" 
+        fill="none" 
+        stroke="#F97316" 
+        stroke-width="10" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+
+  <!-- Titik Kuning Kecil di Atas Perisai (Simbol Sorotan/Notifikasi) -->
+  <circle cx="100" cy="40" r="9" fill="#FBBF24" stroke="#FFFFFF" stroke-width="2"/>
+</svg>

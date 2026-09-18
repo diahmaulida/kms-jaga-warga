@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F97316">
+  <title>Jaga Warga — Aplikasi Pengaduan & Informasi RT/RW</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { primary:'#F97316','primary-dark':'#EA580C','primary-soft':'#FFF7ED',surface:'#F8FAFC' },
+        fontFamily: { sans: ['Inter','system-ui','sans-serif'] }
+      }}
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    html { font-size: 15px; }
+    body { font-family: 'Inter', sans-serif; }
+    button, .btn { min-height: 44px; font-size: 0.9375rem; font-weight: 600; }
+    input, select, textarea { min-height: 44px; font-size: 0.9375rem; }
+    .fade-in { animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to {opacity:1; transform:translateY(0);} }
+    .pulse-red { animation: pulseRed 1.8s infinite; }
+    @keyframes pulseRed {
+      0% { box-shadow: 0 0 0 0 rgba(239,68,68,.6); }
+      70% { box-shadow: 0 0 0 16px rgba(239,68,68,0); }
+      100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 1rem;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+      border: 1px solid #E2E8F0;
+    }
+    @media (min-width: 640px) {
+      .card { padding: 1.25rem; border-radius: 1.25rem; }
+    }
+    /* Quick access card gaya baru */
+    .quick-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 0.875rem;
+      background: white;
+      border-radius: 1rem;
+      border: 1px solid #E2E8F0;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: left;
+      width: 100%;
+      position: relative;
+    }
+    .quick-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px -8px rgba(0,0,0,.12);
+    }
+    .quick-icon {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 0.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.125rem;
+      color: white;
+      flex-shrink: 0;
+    }
+    @media (min-width: 640px) {
+      .quick-card { padding: 1rem; gap: 0.875rem; }
+      .quick-icon { width: 3rem; height: 3rem; font-size: 1.25rem; }
+    }
+    /* Aktivitas item */
+    .activity-item {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.875rem 0;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .activity-icon {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9375rem;
+      flex-shrink: 0;
+    }
+    /* Menu card (fallback) */
+    .menu-card {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      padding: 0.875rem 1rem;
+      background: white;
+      border-radius: 1rem;
+      border: 1px solid #E2E8F0;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: left;
+      width: 100%;
+    }
+    .menu-card:hover {
+      border-color: #F97316;
+      background: #FFF7ED;
+      transform: translateY(-1px);
+    }
+    .menu-icon {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.125rem;
+      color: white;
+      flex-shrink: 0;
+    }
+    .title-page { font-size: 1.125rem; font-weight: 700; line-height: 1.3; }
+    .title-section { font-size: 1rem; font-weight: 700; line-height: 1.35; }
+    .title-card { font-size: 0.9375rem; font-weight: 700; line-height: 1.4; }
+    .text-body { font-size: 0.875rem; line-height: 1.5; }
+    .text-meta { font-size: 0.75rem; line-height: 1.4; color: #64748B; }
+    @media (min-width: 640px) {
+      .title-page { font-size: 1.25rem; }
+      .title-section { font-size: 1.0625rem; }
+      .title-card { font-size: 1rem; }
+      .text-body { font-size: 0.9375rem; }
+    }
+    body.senior-mode { font-size: 17px; }
+    body.senior-mode button, body.senior-mode .btn { min-height: 52px; }
+  </style>
+</head>
+<body class="bg-surface text-slate-800 min-h-screen">
+
+  <!-- ============================================================ -->
+  <!-- HALAMAN LOGIN / DAFTAR                                        -->
+  <!-- ============================================================ -->
+  <div id="page-auth" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-orange-50 via-white to-orange-50">
+    <div class="w-full max-w-sm">
+      <div class="text-center mb-6 fade-in">
+        <div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-orange-200 mx-auto mb-3">
+          <i class="fas fa-shield-heart text-2xl"></i>
+        </div>
+        <h1 class="text-xl font-extrabold tracking-tight text-slate-900">Jaga Warga</h1>
+        <p class="text-meta mt-1">Aplikasi Pengaduan & Informasi Warga</p>
+      </div>
+
+      <div class="card fade-in">
+        <div class="flex bg-slate-100 rounded-xl p-1 mb-5">
+          <button onclick="switchAuthMode('login')" id="authTabLogin" class="flex-1 py-2.5 rounded-lg font-semibold text-sm transition tab-active">
+            <i class="fas fa-right-to-bracket mr-1"></i> Masuk
+          </button>
+          <button onclick="switchAuthMode('register')" id="authTabRegister" class="flex-1 py-2.5 rounded-lg font-semibold text-sm transition text-slate-600">
+            <i class="fas fa-user-plus mr-1"></i> Daftar
+          </button>
+        </div>
+
+        <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();" class="space-y-4">
+          <div>
+            <label class="block font-semibold mb-1.5 text-sm text-slate-700">Nomor HP / Nama Akun</label>
+            <input id="loginIdentifier" required type="text" placeholder="081234567890 atau rt03" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary focus:ring-2 focus:ring-orange-100 outline-none text-sm transition">
+            <p class="text-meta mt-1.5"><i class="fas fa-info-circle"></i> Pengurus: ketik "rt03" atau "rw03"</p>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1.5 text-sm text-slate-700">Kata Sandi</label>
+            <input id="loginPassword" required type="password" placeholder="Masukkan kata sandi" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary focus:ring-2 focus:ring-orange-100 outline-none text-sm transition">
+          </div>
+          <button type="submit" class="w-full py-3 rounded-lg bg-primary text-white hover:bg-primary-dark transition shadow-md shadow-orange-200 text-sm font-bold">
+            <i class="fas fa-right-to-bracket mr-1.5"></i> Masuk
+          </button>
+          <div class="text-center text-meta pt-1">
+            Belum punya akun? <button type="button" onclick="switchAuthMode('register')" class="text-primary font-semibold hover:underline">Daftar</button>
+          </div>
+        </form>
+
+        <form id="registerForm" onsubmit="event.preventDefault(); handleRegister();" class="space-y-4 hidden">
+          <div>
+            <label class="block font-semibold mb-1.5 text-sm text-slate-700">Nama Lengkap</label>
+            <input id="regName" required type="text" placeholder="Sesuai KTP" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1.5 text-sm text-slate-700">Nomor HP</label>
+            <input id="regPhone" required type="tel" placeholder="08xxxxxxxxxx" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1.5 text-sm text-slate-700">Kata Sandi</label>
+            <input id="regPassword" required type="password" placeholder="Minimal 6 karakter" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm">
+          </div>
+          <div>
+            <label class="block font-semibold mb-2 text-sm text-slate-700">Saya adalah:</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="cursor-pointer">
+                <input type="radio" name="regRole" value="warga" class="peer sr-only" checked onchange="updateRegionFields()">
+                <div class="p-2.5 rounded-lg border-2 border-slate-200 text-center peer-checked:border-primary peer-checked:bg-primary-soft transition">
+                  <i class="fas fa-user text-lg text-primary block mb-0.5"></i>
+                  <span class="text-xs font-semibold">Warga</span>
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="regRole" value="rt" class="peer sr-only" onchange="updateRegionFields()">
+                <div class="p-2.5 rounded-lg border-2 border-slate-200 text-center peer-checked:border-primary peer-checked:bg-primary-soft transition">
+                  <i class="fas fa-house-chimney-user text-lg text-primary block mb-0.5"></i>
+                  <span class="text-xs font-semibold">RT</span>
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="regRole" value="rw" class="peer sr-only" onchange="updateRegionFields()">
+                <div class="p-2.5 rounded-lg border-2 border-slate-200 text-center peer-checked:border-primary peer-checked:bg-primary-soft transition">
+                  <i class="fas fa-building-flag text-lg text-primary block mb-0.5"></i>
+                  <span class="text-xs font-semibold">RW</span>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div id="regionFields">
+            <div id="rtField">
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Pilih RT</label>
+              <select id="regRT" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-sm">
+                <option>RT 01</option><option>RT 02</option><option selected>RT 03</option><option>RT 04</option><option>RT 05</option>
+              </select>
+            </div>
+            <div id="rwField" class="hidden">
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Pilih RW</label>
+              <select id="regRW" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-sm">
+                <option>RW 01</option><option>RW 02</option><option selected>RW 03</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="w-full py-3 rounded-lg bg-primary text-white hover:bg-primary-dark transition text-sm font-bold">
+            <i class="fas fa-user-plus mr-1.5"></i> Daftar
+          </button>
+        </form>
+      </div>
+
+      <div class="mt-4 card" style="padding: 0.875rem;">
+        <p class="text-meta text-center mb-2.5"><i class="fas fa-circle-info text-primary"></i> Coba dulu tanpa daftar:</p>
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="quickDemo('warga')" class="py-2 rounded-lg bg-orange-100 text-primary-dark font-semibold text-xs hover:bg-orange-200 transition">
+            <i class="fas fa-user block text-sm mb-0.5"></i>Warga
+          </button>
+          <button onclick="quickDemo('rt')" class="py-2 rounded-lg bg-blue-100 text-blue-700 font-semibold text-xs hover:bg-blue-200 transition">
+            <i class="fas fa-house-chimney-user block text-sm mb-0.5"></i>RT
+          </button>
+          <button onclick="quickDemo('rw')" class="py-2 rounded-lg bg-purple-100 text-purple-700 font-semibold text-xs hover:bg-purple-200 transition">
+            <i class="fas fa-building-flag block text-sm mb-0.5"></i>RW
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- DASHBOARD                                                     -->
+  <!-- ============================================================ -->
+  <div id="page-dashboard" class="hidden">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+      <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <button onclick="goBack()" id="backBtn" class="hidden w-9 h-9 rounded-full bg-slate-100 hover:bg-primary-soft flex items-center justify-center text-slate-600 flex-shrink-0 transition">
+            <i class="fas fa-arrow-left text-sm"></i>
+          </button>
+          <div id="headerLogo" class="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center text-white shadow-md flex-shrink-0">
+            <i class="fas fa-shield-heart text-lg"></i>
+          </div>
+          <div class="min-w-0">
+            <h1 class="font-extrabold text-base leading-tight truncate text-slate-900" id="pageTitle">Jaga Warga</h1>
+            <p class="text-meta truncate" id="headerSub">Memuat...</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <button onclick="toggleSeniorMode()" class="hidden sm:flex w-9 h-9 rounded-full bg-slate-100 hover:bg-primary-soft items-center justify-center text-slate-600 transition text-xs font-bold" title="Perbesar tulisan">
+            A+
+          </button>
+          <button onclick="gotoPage('profil')" class="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full bg-orange-50 hover:bg-orange-100 border border-orange-100 transition" title="Profil Saya">
+            <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+              <i class="fas fa-user text-sm" id="profileIcon"></i>
+            </div>
+            <i class="fas fa-chevron-down text-orange-400 text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-5 pb-10" id="mainContent"></main>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl fade-in">
+      <div class="flex justify-between items-start mb-3">
+        <h3 id="modalTitle" class="font-bold text-base pr-2">Konfirmasi</h3>
+        <button onclick="closeModal()" class="text-slate-400 text-2xl leading-none hover:text-slate-600">&times;</button>
+      </div>
+      <p id="modalBody" class="text-body text-slate-600 mb-5"></p>
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="closeModal()" class="py-2.5 rounded-lg border border-slate-200 font-semibold text-sm">Batal</button>
+        <button id="modalConfirmBtn" class="py-2.5 rounded-lg bg-primary text-white font-semibold text-sm">Ya</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2.5 rounded-xl font-medium shadow-xl z-50 hidden items-center gap-2 max-w-[90%]">
+    <i class="fas fa-circle-check text-green-400"></i>
+    <span id="toastMsg" class="text-sm"></span>
+  </div>
+
+  <audio id="sirene" src="assets/sirene.mp3" preload="auto"></audio>
+
+  <script>
+    // ================== STATE ==================
+    let currentPage = 'dashboard';
+    let seniorMode = false;
+    let currentPengumumanId = null;
+
+    // ================== DATA ==================
+    let reports = JSON.parse(localStorage.getItem('jw_reports')) || [
+      { id:'RPT-001', judul:'Lampu jalan mati di Blok C', kategori:'Fasilitas Umum', urgensi:'Sedang', status:'Menunggu Verifikasi RT', anonim:false, pelapor:'Budi', tanggal:'01 Mar 2025', rt:'RT 03', rw:'RW 03', deskripsi:'Lampu penerangan jalan mati sejak 2 hari.', eskalasi:false, lokasi:'Blok C' },
+      { id:'RPT-002', judul:'Sampah menumpuk dekat pos ronda', kategori:'Kebersihan', urgensi:'Tinggi', status:'Sedang Diproses RT', anonim:true, pelapor:'Anonim', tanggal:'02 Mar 2025', rt:'RT 03', rw:'RW 03', deskripsi:'Bau tidak sedap, mengganggu warga.', eskalasi:true, lokasi:'Pos ronda' },
+      { id:'RPT-003', judul:'Jalan berlubang di depan gang 5', kategori:'Infrastruktur', urgensi:'Rendah', status:'Sedang Ditangani', anonim:false, pelapor:'Siti', tanggal:'28 Feb 2025', rt:'RT 05', rw:'RW 03', deskripsi:'Membahayakan pengendara motor.', eskalasi:false, lokasi:'Gang 5' },
+      { id:'RPT-004', judul:'Pencurian sepeda di halaman masjid', kategori:'Keamanan', urgensi:'Tinggi', status:'Selesai', anonim:false, pelapor:'Ahmad', tanggal:'25 Feb 2025', rt:'RT 03', rw:'RW 03', deskripsi:'Hilang saat sholat maghrib.', eskalasi:false, lokasi:'Masjid' },
+    ];
+
+    let knowledgeRepo = JSON.parse(localStorage.getItem('jw_repo')) || [
+      { id:'SOP-001', judul:'Cara Menghadapi Banjir', tipe:'SOP', tanggal:'10 Jan 2025', deskripsi:'Langkah evakuasi & koordinasi antar RT.' },
+      { id:'REG-002', judul:'Aturan Keamanan Lingkungan', tipe:'Regulasi', tanggal:'15 Des 2024', deskripsi:'Jadwal ronda & aturan tamu menginap.' },
+      { id:'FAQ-003', judul:'Solusi Sampah Menumpuk', tipe:'FAQ', tanggal:'20 Feb 2025', deskripsi:'Cara koordinasi dengan Dinas Kebersihan.' },
+    ];
+
+    let broadcastList = JSON.parse(localStorage.getItem('jw_broadcast')) || [
+      {
+        id:1,
+        judul:'Kerja Bakti Minggu Ini',
+        pesan:'Diharapkan kehadiran seluruh warga untuk kerja bakti membersihkan saluran air & lingkungan. Membawa peralatan kebersihan masing-masing. Konsumsi disediakan oleh ibu-ibu PKK.',
+        tanggal:'03 Mar 2025',
+        target:'RW', rt:'-', rw:'RW 03',
+        pembuat:'Ketua RW 03',
+        gambar:'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
+        jadwal:[
+          { waktu:'07.00', kegiatan:'Kumpul di lapangan RW' },
+          { waktu:'07.30', kegiatan:'Pembagian area kerja bakti' },
+          { waktu:'08.00', kegiatan:'Mulai bersih-bersih' },
+          { waktu:'10.00', kegiatan:'Istirahat & makan bersama' },
+          { waktu:'10.30', kegiatan:'Lanjut kerja bakti' },
+          { waktu:'11.30', kegiatan:'Penutupan & foto bersama' }
+        ]
+      },
+      {
+        id:2,
+        judul:'Waspada Demam Berdarah',
+        pesan:'Kasus DBD meningkat di wilayah kita. Mohon lakukan 3M Plus: Menguras, Menutup, Mendaur ulang, Plus hindari gigitan nyamuk. Fogging akan dilakukan pekan depan.',
+        tanggal:'01 Mar 2025',
+        target:'RW', rt:'-', rw:'RW 03',
+        pembuat:'Ketua RW 03',
+        gambar:'https://images.unsplash.com/photo-1584515933487-779824d29309?w=800&q=80',
+        jadwal:[
+          { waktu:'Senin, 10 Mar', kegiatan:'Fogging Blok A & B' },
+          { waktu:'Selasa, 11 Mar', kegiatan:'Fogging Blok C & D' },
+          { waktu:'Rabu, 12 Mar', kegiatan:'Pemeriksaan jentik' }
+        ]
+      },
+      {
+        id:3,
+        judul:'Ronda Malam Diperketat',
+        pesan:'Mulai Senin depan, jadwal ronda malam diperketat. Setiap KK wajib menyumbang 1 orang. Jadwal lengkap akan ditempel di pos ronda.',
+        tanggal:'02 Mar 2025',
+        target:'RT', rt:'RT 03', rw:'RW 03',
+        pembuat:'Ketua RT 03',
+        gambar:'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&q=80',
+        jadwal:[
+          { waktu:'Senin', kegiatan:'Kelompok 1 (Blok A)' },
+          { waktu:'Selasa', kegiatan:'Kelompok 2 (Blok B)' },
+          { waktu:'Rabu', kegiatan:'Kelompok 3 (Blok C)' },
+          { waktu:'Kamis', kegiatan:'Kelompok 4 (Blok D)' },
+          { waktu:'Jumat', kegiatan:'Kelompok 5 (Blok E)' },
+          { waktu:'Sabtu', kegiatan:'Kelompok 6 (Blok F)' },
+          { waktu:'Minggu', kegiatan:'Kelompok 7 (Blok G)' }
+        ]
+      },
+    ];
+
+    let panicLogs = JSON.parse(localStorage.getItem('jw_panic')) || [];
+
+    function saveAll() {
+      localStorage.setItem('jw_reports', JSON.stringify(reports));
+      localStorage.setItem('jw_repo', JSON.stringify(knowledgeRepo));
+      localStorage.setItem('jw_broadcast', JSON.stringify(broadcastList));
+      localStorage.setItem('jw_panic', JSON.stringify(panicLogs));
+    }
+
+    function getCurrentUser() {
+      const u = localStorage.getItem('jw_user');
+      return u ? JSON.parse(u) : null;
+    }
+    function setCurrentUser(user) {
+      if (user) localStorage.setItem('jw_user', JSON.stringify(user));
+      else localStorage.removeItem('jw_user');
+    }
+
+    // ================== NAVIGASI ==================
+    function gotoPage(page) {
+      currentPage = page;
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function goBack() { gotoPage('dashboard'); }
+
+    function toggleSeniorMode() {
+      seniorMode = !seniorMode;
+      document.body.classList.toggle('senior-mode', seniorMode);
+      showToast(seniorMode ? 'Tulisan diperbesar' : 'Tulisan normal', 'info');
+    }
+
+    // ================== TOAST & MODAL ==================
+    function showToast(msg, icon = 'check') {
+      const t = document.getElementById('toast');
+      const map = { check:'fa-circle-check text-green-400', info:'fa-circle-info text-blue-400', warn:'fa-triangle-exclamation text-yellow-400' };
+      t.querySelector('i').className = 'fas ' + (map[icon] || map.check);
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.remove('hidden'); t.classList.add('flex');
+      setTimeout(() => { t.classList.add('hidden'); t.classList.remove('flex'); }, 2500);
+    }
+    function openModal(title, body, cb) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').textContent = body;
+      const m = document.getElementById('modal');
+      m.classList.remove('hidden'); m.classList.add('flex');
+      const btn = document.getElementById('modalConfirmBtn');
+      const n = btn.cloneNode(true);
+      btn.parentNode.replaceChild(n, btn);
+      n.addEventListener('click', () => { cb(); closeModal(); });
+    }
+    function closeModal() {
+      const m = document.getElementById('modal');
+      m.classList.add('hidden'); m.classList.remove('flex');
+    }
+
+    // ================== BADGE ==================
+    function badgeStatus(s) {
+      const map = {
+        'Menunggu Verifikasi RT':'bg-amber-50 text-amber-700 border-amber-200',
+        'Sedang Diproses RT':'bg-blue-50 text-blue-700 border-blue-200',
+        'Sedang Ditangani':'bg-indigo-50 text-indigo-700 border-indigo-200',
+        'Selesai':'bg-green-50 text-green-700 border-green-200'
+      };
+      const icon = {
+        'Menunggu Verifikasi RT':'fa-clock',
+        'Sedang Diproses RT':'fa-spinner',
+        'Sedang Ditangani':'fa-screwdriver-wrench',
+        'Selesai':'fa-circle-check'
+      };
+      return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${map[s]||'bg-slate-50 text-slate-600 border-slate-200'}">
+        <i class="fas ${icon[s]||'fa-circle'}"></i> ${s}
+      </span>`;
+    }
+    function badgeUrgensi(u) {
+      const map = { 'Rendah':'bg-slate-50 text-slate-600 border-slate-200', 'Sedang':'bg-orange-50 text-orange-700 border-orange-200', 'Tinggi':'bg-red-50 text-red-700 border-red-200' };
+      return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold border ${map[u]||''}">${u}</span>`;
+    }
+
+    // ================== AUTH ==================
+    function switchAuthMode(mode) {
+      const lf = document.getElementById('loginForm');
+      const rf = document.getElementById('registerForm');
+      const tl = document.getElementById('authTabLogin');
+      const tr = document.getElementById('authTabRegister');
+      if (mode === 'login') {
+        lf.classList.remove('hidden'); rf.classList.add('hidden');
+        tl.classList.add('tab-active'); tr.classList.remove('tab-active');
+      } else {
+        lf.classList.add('hidden'); rf.classList.remove('hidden');
+        tr.classList.add('tab-active'); tl.classList.remove('tab-active');
+      }
+    }
+    function updateRegionFields() {
+      const role = document.querySelector('input[name="regRole"]:checked').value;
+      document.getElementById('rtField').classList.toggle('hidden', role === 'rw');
+      document.getElementById('rwField').classList.toggle('hidden', role !== 'rw');
+    }
+    function handleLogin() {
+      const id = document.getElementById('loginIdentifier').value.trim().toLowerCase();
+      const pwd = document.getElementById('loginPassword').value.trim();
+      if (!id || !pwd) { showToast('Isi nama akun & kata sandi', 'warn'); return; }
+      let role='warga', rt='RT 03', rw='RW 03', name='Warga';
+      if (id.includes('rt')) {
+        const m = id.match(/rt\s*(\d+)/);
+        rt = m ? 'RT ' + m[1].padStart(2,'0') : 'RT 03';
+        role='rt'; name='Ketua ' + rt;
+      } else if (id.includes('rw')) {
+        const m = id.match(/rw\s*(\d+)/);
+        rw = m ? 'RW ' + m[1].padStart(2,'0') : 'RW 03';
+        role='rw'; name='Ketua ' + rw;
+      } else {
+        name = id.split('@')[0] || 'Warga';
+      }
+      doLogin({ name, role, rt, rw });
+    }
+    function quickDemo(role) {
+      const map = {
+        warga:{ name:'Budi Santoso', role:'warga', rt:'RT 03', rw:'RW 03' },
+        rt:{ name:'Ketua RT 03', role:'rt', rt:'RT 03', rw:'RW 03' },
+        rw:{ name:'Ketua RW 03', role:'rw', rt:'RT 03', rw:'RW 03' }
+      };
+      doLogin(map[role]);
+    }
+    function handleRegister() {
+      const name=document.getElementById('regName').value.trim();
+      const phone=document.getElementById('regPhone').value.trim();
+      const pwd=document.getElementById('regPassword').value.trim();
+      if (!name || !phone || !pwd) { showToast('Lengkapi semua data','warn'); return; }
+      if (pwd.length < 6) { showToast('Kata sandi minimal 6 karakter','warn'); return; }
+      showToast('Akun dibuat! Silakan masuk.');
+      setTimeout(() => {
+        switchAuthMode('login');
+        document.getElementById('loginIdentifier').value = phone;
+        document.getElementById('loginPassword').value = pwd;
+      }, 1200);
+    }
+    function doLogin(user) {
+      setCurrentUser(user);
+      document.getElementById('page-auth').classList.add('hidden');
+      document.getElementById('page-dashboard').classList.remove('hidden');
+      document.getElementById('headerSub').textContent = `${user.name} · ${user.rt} · ${user.rw}`;
+      currentPage = 'dashboard';
+      render();
+      showToast(`Selamat datang, ${user.name}`);
+    }
+    function handleLogout() {
+      openModal('Keluar', 'Anda yakin ingin keluar dari aplikasi?', () => {
+        setCurrentUser(null);
+        document.getElementById('page-dashboard').classList.add('hidden');
+        document.getElementById('page-auth').classList.remove('hidden');
+        document.getElementById('loginForm').reset();
+        showToast('Anda telah keluar');
+      });
+    }
+
+    // ================== ROUTER ==================
+    function render() {
+      const user = getCurrentUser();
+      if (!user) return;
+      const main = document.getElementById('mainContent');
+      const backBtn = document.getElementById('backBtn');
+      const pageTitle = document.getElementById('pageTitle');
+      const headerLogo = document.getElementById('headerLogo');
+
+      if (currentPage === 'dashboard') {
+        backBtn.classList.add('hidden');
+        headerLogo.classList.remove('hidden');
+        // Judul dinamis sesuai role
+        if (user.role === 'warga') pageTitle.textContent = 'Jaga Warga';
+        else if (user.role === 'rt') pageTitle.textContent = `Beranda ${user.rt}`;
+        else pageTitle.textContent = `Beranda ${user.rw}`;
+      } else {
+        backBtn.classList.remove('hidden');
+        headerLogo.classList.add('hidden');
+      }
+
+      let html = '';
+      if (currentPage === 'dashboard') html = renderDashboard(user);
+      else if (currentPage === 'profil') html = renderProfil(user);
+      else if (currentPage === 'editProfil') html = renderEditProfil(user);
+      else if (currentPage === 'buatLaporan') html = renderBuatLaporan(user);
+      else if (currentPage === 'cekStatus') html = renderCekStatus(user);
+      else if (currentPage === 'pengumumanWarga') html = renderPengumumanWarga(user);
+      else if (currentPage === 'detailPengumuman') html = renderDetailPengumuman(user);
+      else if (currentPage === 'darurat') html = renderDarurat(user);
+      else if (currentPage === 'riwayatDarurat') html = renderRiwayatDarurat(user);
+      else if (currentPage === 'kelolaLaporan') html = renderKelolaLaporan(user);
+      else if (currentPage === 'buatPengumuman') html = renderBuatPengumuman(user);
+      else if (currentPage === 'proxyReport') html = renderProxyReport(user);
+      else if (currentPage === 'laporanEskalasi') html = renderLaporanEskalasi(user);
+      else if (currentPage === 'arsipDokumen') html = renderArsipDokumen(user);
+      else if (currentPage === 'kinerjaRT') html = renderKinerjaRT(user);
+
+      main.innerHTML = html;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ================== DASHBOARD (GAYA BARU) ==================
+    function renderDashboard(user) {
+      let hero, quickMenus, activities;
+
+      if (user.role === 'warga') {
+        hero = {
+          title: `Halo, ${user.name}`,
+          subtitle: 'Semua laporan Anda terpantau',
+          desc: `Terima kasih sudah selalu menjaga lingkungan ${user.rt}.`,
+          illustration: 'house'
+        };
+        quickMenus = [
+          { id:'buatLaporan', label:'Buat Laporan', desc:'Laporkan masalah di lingkungan', icon:'fa-pen-to-square', bg:'#F97316', bgSoft:'#FFF7ED', border:'#FFEDD5' },
+          { id:'cekStatus', label:'Cek Status', desc:'Lihat progres laporan Anda', icon:'fa-magnifying-glass-chart', bg:'#3B82F6', bgSoft:'#EFF6FF', border:'#DBEAFE' },
+          { id:'pengumumanWarga', label:'Pengumuman', desc:'Info dari RT dan RW', icon:'fa-bullhorn', bg:'#8B5CF6', bgSoft:'#F5F3FF', border:'#EDE9FE' },
+          { id:'arsipDokumen', label:'Info & Kontak', desc:'SOP, aturan & kontak penting', icon:'fa-folder-open', bg:'#10B981', bgSoft:'#ECFDF5', border:'#A7F3D0' },
+        ];
+        activities = [
+          { icon:'fa-file-circle-check', bg:'#DCFCE7', color:'#16A34A', title:'Laporan Anda diverifikasi', desc:'Lampu jalan Blok C sedang ditangani', time:'2 jam lalu' },
+          { icon:'fa-bullhorn', bg:'#F3E8FF', color:'#9333EA', title:'Pengumuman baru dari RW', desc:'Jadwal kerja bakti minggu depan', time:'4 jam lalu' },
+          { icon:'fa-circle-info', bg:'#DBEAFE', color:'#2563EB', title:'Info dari RT 03', desc:'Koordinasi kegiatan posyandu bulan ini', time:'6 jam lalu' },
+        ];
+      } else if (user.role === 'rt') {
+        const myRT = reports.filter(r => r.rt === user.rt);
+        hero = {
+          title: `Halo, Ketua ${user.rt}`,
+          subtitle: 'Semua laporan hari ini terpantau',
+          desc: `Terima kasih sudah selalu menjaga lingkungan ${user.rt}.`,
+          illustration: 'house'
+        };
+        quickMenus = [
+          { id:'kelolaLaporan', label:'Kelola Laporan', desc:`Laporan dari warga ${user.rt}`, icon:'fa-inbox', bg:'#F97316', bgSoft:'#FFF7ED', border:'#FFEDD5' },
+          { id:'buatPengumuman', label:'Buat Pengumuman', desc:`Kirim info ke warga ${user.rt}`, icon:'fa-bullhorn', bg:'#8B5CF6', bgSoft:'#F5F3FF', border:'#EDE9FE' },
+          { id:'proxyReport', label:'Bantu Input Laporan', desc:'Untuk warga tanpa HP', icon:'fa-people-arrows', bg:'#10B981', bgSoft:'#ECFDF5', border:'#A7F3D0' },
+          { id:'pengumumanWarga', label:'Info dari RW', desc:`Informasi penting dari ${user.rw}`, icon:'fa-house-chimney', bg:'#3B82F6', bgSoft:'#EFF6FF', border:'#DBEAFE' },
+        ];
+        const newCount = myRT.filter(r=>r.status==='Menunggu Verifikasi RT').length;
+        activities = [
+          { icon:'fa-file-circle-plus', bg:'#DCFCE7', color:'#16A34A', title:'Laporan warga baru', desc: newCount > 0 ? `${newCount} laporan menunggu verifikasi` : 'Semua laporan sudah diverifikasi', time:'2 jam lalu' },
+          { icon:'fa-bullhorn', bg:'#F3E8FF', color:'#9333EA', title:'Pengumuman terkirim', desc:'Jadwal kerja bakti minggu depan', time:'4 jam lalu' },
+          { icon:'fa-circle-info', bg:'#DBEAFE', color:'#2563EB', title:`Info dari ${user.rw}`, desc:'Koordinasi kegiatan posyandu bulan ini', time:'6 jam lalu' },
+        ];
+      } else {
+        const myRW = reports.filter(r => r.rw === user.rw);
+        const escalCount = myRW.filter(r=>r.eskalasi && r.status !== 'Selesai').length;
+        hero = {
+          title: `Halo, Ketua ${user.rw}`,
+          subtitle: 'Semua laporan hari ini terpantau',
+          desc: `Terima kasih sudah menjaga koordinasi antar RT di ${user.rw}.`,
+          illustration: 'building'
+        };
+        quickMenus = [
+          { id:'laporanEskalasi', label:'Laporan dari RT', desc:'Laporan yang diteruskan ke RW', icon:'fa-inbox', bg:'#F97316', bgSoft:'#FFF7ED', border:'#FFEDD5' },
+          { id:'buatPengumuman', label:'Buat Pengumuman', desc:`Kirim info ke semua warga ${user.rw}`, icon:'fa-bullhorn', bg:'#8B5CF6', bgSoft:'#F5F3FF', border:'#EDE9FE' },
+          { id:'arsipDokumen', label:'Arsip Dokumen', desc:'SOP, aturan & solusi masalah', icon:'fa-folder-open', bg:'#10B981', bgSoft:'#ECFDF5', border:'#A7F3D0' },
+          { id:'kinerjaRT', label:'Kinerja RT', desc:'Pantau kecepatan respons tiap RT', icon:'fa-chart-bar', bg:'#3B82F6', bgSoft:'#EFF6FF', border:'#DBEAFE' },
+        ];
+        activities = [
+          { icon:'fa-arrow-up', bg:'#FEE2E2', color:'#DC2626', title:'Laporan eskalasi baru', desc: escalCount > 0 ? `${escalCount} laporan dari RT menunggu` : 'Tidak ada eskalasi baru', time:'1 jam lalu' },
+          { icon:'fa-bullhorn', bg:'#F3E8FF', color:'#9333EA', title:'Pengumuman terkirim', desc:'Kerja bakti minggu depan', time:'3 jam lalu' },
+          { icon:'fa-chart-line', bg:'#DBEAFE', color:'#2563EB', title:'Kinerja RT meningkat', desc:'Rata-rata respons turun ke 2.4 hari', time:'6 jam lalu' },
+        ];
+      }
+
+      return `
+        <div class="fade-in">
+          <!-- HERO CARD -->
+          <div class="rounded-2xl p-5 mb-5 relative overflow-hidden" style="background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);">
+            <div class="relative z-10" style="max-width: 60%;">
+              <div class="w-8 h-1 bg-primary rounded-full mb-3"></div>
+              <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 leading-tight mb-2">${hero.title} 👋</h2>
+              <div class="flex items-start gap-2 mb-2">
+                <i class="fas fa-circle-check text-green-500 text-sm mt-0.5"></i>
+                <p class="text-xs font-bold text-green-700">${hero.subtitle}</p>
+              </div>
+              <p class="text-xs text-slate-600 leading-relaxed">${hero.desc}</p>
+            </div>
+            <!-- Ilustrasi -->
+            <div class="absolute right-2 bottom-0 top-0 flex items-center" style="width: 40%; max-width: 160px;">
+              ${hero.illustration === 'house' ? `
+                <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto opacity-90">
+                  <ellipse cx="100" cy="150" rx="90" ry="6" fill="#FDBA74" opacity="0.3"/>
+                  <rect x="60" y="80" width="80" height="60" rx="4" fill="#FFFFFF" stroke="#F97316" stroke-width="2"/>
+                  <polygon points="50,85 100,50 150,85" fill="#F97316"/>
+                  <rect x="75" y="100" width="15" height="15" fill="#93C5FD"/>
+                  <rect x="110" y="100" width="15" height="15" fill="#93C5FD"/>
+                  <rect x="90" y="120" width="20" height="20" fill="#FB923C"/>
+                  <rect x="30" y="90" width="15" height="50" rx="2" fill="#16A34A"/>
+                  <circle cx="37" cy="85" r="20" fill="#22C55E"/>
+                  <rect x="155" y="90" width="15" height="50" rx="2" fill="#16A34A"/>
+                  <circle cx="162" cy="85" r="20" fill="#22C55E"/>
+                  <rect x="20" y="60" width="4" height="80" fill="#64748B"/>
+                  <circle cx="22" cy="58" r="4" fill="#FCD34D"/>
+                  <rect x="176" y="60" width="4" height="80" fill="#64748B"/>
+                  <circle cx="178" cy="58" r="4" fill="#FCD34D"/>
+                </svg>
+              ` : `
+                <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto opacity-90">
+                  <ellipse cx="100" cy="150" rx="90" ry="6" fill="#FDBA74" opacity="0.3"/>
+                  <rect x="40" y="60" width="60" height="80" rx="4" fill="#FFFFFF" stroke="#F97316" stroke-width="2"/>
+                  <rect x="50" y="70" width="12" height="12" fill="#93C5FD"/>
+                  <rect x="78" y="70" width="12" height="12" fill="#93C5FD"/>
+                  <rect x="50" y="90" width="12" height="12" fill="#93C5FD"/>
+                  <rect x="78" y="90" width="12" height="12" fill="#93C5FD"/>
+                  <rect x="60" y="115" width="20" height="25" fill="#FB923C"/>
+                  <rect x="110" y="80" width="50" height="60" rx="4" fill="#FFFFFF" stroke="#F97316" stroke-width="2"/>
+                  <rect x="120" y="90" width="10" height="10" fill="#93C5FD"/>
+                  <rect x="140" y="90" width="10" height="10" fill="#93C5FD"/>
+                  <rect x="120" y="110" width="10" height="10" fill="#93C5FD"/>
+                  <rect x="140" y="110" width="10" height="10" fill="#93C5FD"/>
+                  <circle cx="30" cy="140" r="18" fill="#22C55E"/>
+                  <rect x="27" y="140" width="6" height="15" fill="#16A34A"/>
+                  <circle cx="175" cy="140" r="18" fill="#22C55E"/>
+                  <rect x="172" y="140" width="6" height="15" fill="#16A34A"/>
+                </svg>
+              `}
+            </div>
+          </div>
+
+          <!-- AKSES CEPAT -->
+          <div class="mb-5">
+            <h2 class="text-base font-extrabold text-slate-900 mb-1">Akses Cepat</h2>
+            <p class="text-meta mb-3">Kelola lingkungan ${user.rt} dengan lebih mudah</p>
+
+            <div class="grid grid-cols-2 gap-3">
+              ${quickMenus.map(m => `
+                <button onclick="gotoPage('${m.id}')" class="quick-card" style="background: ${m.bgSoft}; border-color: ${m.border};">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="quick-icon" style="background: ${m.bg}">
+                      <i class="fas ${m.icon}"></i>
+                    </div>
+                    <i class="fas fa-chevron-right text-slate-300 text-xs mt-2"></i>
+                  </div>
+                  <div>
+                    <p class="font-bold text-sm text-slate-900 leading-tight">${m.label}</p>
+                    <p class="text-xs text-slate-600 mt-1 leading-snug">${m.desc}</p>
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- TOMBOL DARURAT -->
+          <button onclick="gotoPage('darurat')" class="w-full flex items-center gap-3 p-4 rounded-2xl mb-5 transition hover:scale-[1.01]" style="background: #FEF2F2; border: 1.5px solid #FECACA;">
+            <div class="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-red-200 pulse-red">
+              <i class="fas fa-exclamation text-xl"></i>
+            </div>
+            <div class="flex-1 text-left">
+              <p class="font-extrabold text-red-600 text-base">Tombol Darurat</p>
+              <p class="text-xs text-red-500 mt-0.5">Situasi darurat</p>
+            </div>
+            <i class="fas fa-chevron-right text-red-400"></i>
+          </button>
+
+          <!-- AKTIVITAS TERBARU -->
+          <div class="card">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <i class="far fa-clock text-slate-700"></i>
+                <h2 class="text-base font-extrabold text-slate-900">Aktivitas Terbaru</h2>
+              </div>
+              <button onclick="showToast('Lihat semua aktivitas', 'info')" class="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
+                Lihat Semua <i class="fas fa-chevron-right text-[10px]"></i>
+              </button>
+            </div>
+            <div>
+              ${activities.map(a => `
+                <div class="activity-item">
+                  <div class="activity-icon" style="background: ${a.bg}; color: ${a.color};">
+                    <i class="fas ${a.icon}"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-slate-900 leading-tight">${a.title}</p>
+                    <p class="text-xs text-slate-500 mt-0.5 line-clamp-2">${a.desc}</p>
+                  </div>
+                  <span class="text-[10px] text-slate-400 flex-shrink-0 mt-1">${a.time}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ================== HALAMAN: PROFIL ==================
+    function renderProfil(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Profil Saya', 0);
+      const roleLabels = { warga:'Warga', rt:'Pengurus RT', rw:'Pengurus RW' };
+      const roleColors = { warga:'bg-orange-50 text-orange-700 border-orange-200', rt:'bg-blue-50 text-blue-700 border-blue-200', rw:'bg-purple-50 text-purple-700 border-purple-200' };
+      const roleIcons = { warga:'fa-user', rt:'fa-house-chimney-user', rw:'fa-building-flag' };
+
+      const myReports = reports.filter(r => r.pelapor === user.name);
+      const myBroadcasts = broadcastList.filter(b => b.pembuat === user.name);
+      const myPanic = panicLogs.filter(p => p.user === user.name);
+      const firstReport = myReports[myReports.length - 1];
+      const memberSince = firstReport ? firstReport.tanggal : 'Hari ini';
+
+      return `
+        <div class="fade-in">
+          <div class="card mb-4 text-center">
+            <div class="w-20 h-20 bg-primary rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-3 shadow-lg shadow-orange-200">
+              <i class="fas ${roleIcons[user.role]}"></i>
+            </div>
+            <h1 class="text-lg font-extrabold text-slate-900">${user.name}</h1>
+            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border mt-2 ${roleColors[user.role]}">
+              <i class="fas ${roleIcons[user.role]}"></i> ${roleLabels[user.role]}
+            </span>
+            <p class="text-meta mt-3">
+              <i class="fas fa-map-marker-alt mr-1"></i>${user.rt} · ${user.rw}
+            </p>
+          </div>
+
+          <div class="card mb-4">
+            <h2 class="title-section mb-3">Statistik Saya</h2>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="text-center p-3 bg-slate-50 rounded-xl">
+                <p class="text-2xl font-extrabold text-primary leading-none">${myReports.length}</p>
+                <p class="text-meta mt-1">Laporan</p>
+              </div>
+              <div class="text-center p-3 bg-slate-50 rounded-xl">
+                <p class="text-2xl font-extrabold text-purple-600 leading-none">${myBroadcasts.length}</p>
+                <p class="text-meta mt-1">Pengumuman</p>
+              </div>
+              <div class="text-center p-3 bg-slate-50 rounded-xl">
+                <p class="text-2xl font-extrabold text-red-500 leading-none">${myPanic.length}</p>
+                <p class="text-meta mt-1">Darurat</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <h2 class="title-section mb-3">Info Akun</h2>
+            <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-500">Nama Lengkap</span>
+                <span class="font-semibold text-slate-900">${user.name}</span>
+              </div>
+              <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-500">Peran</span>
+                <span class="font-semibold text-slate-900">${roleLabels[user.role]}</span>
+              </div>
+              <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-500">RT / RW</span>
+                <span class="font-semibold text-slate-900">${user.rt} · ${user.rw}</span>
+              </div>
+              <div class="flex justify-between py-2">
+                <span class="text-slate-500">Bergabung Sejak</span>
+                <span class="font-semibold text-slate-900">${memberSince}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2.5 mb-4">
+            <button onclick="gotoPage('editProfil')" class="menu-card">
+              <div class="menu-icon" style="background:#3B82F6">
+                <i class="fas fa-user-pen"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="title-card">Edit Profil</p>
+                <p class="text-meta mt-0.5">Ubah nama & info akun</p>
+              </div>
+              <i class="fas fa-chevron-right text-slate-300 text-sm"></i>
+            </button>
+            <button onclick="openModal('Ganti Kata Sandi', 'Fitur ini akan segera tersedia.', () => showToast('Segera hadir', 'info'))" class="menu-card">
+              <div class="menu-icon" style="background:#8B5CF6">
+                <i class="fas fa-key"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="title-card">Ganti Kata Sandi</p>
+                <p class="text-meta mt-0.5">Ubah kata sandi akun</p>
+              </div>
+              <i class="fas fa-chevron-right text-slate-300 text-sm"></i>
+            </button>
+            <button onclick="openModal('Bantuan', 'Hubungi pengurus RT/RW untuk bantuan lebih lanjut.', () => showToast('Terima kasih', 'info'))" class="menu-card">
+              <div class="menu-icon" style="background:#10B981">
+                <i class="fas fa-circle-question"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="title-card">Bantuan & Dukungan</p>
+                <p class="text-meta mt-0.5">Butuh bantuan? Hubungi kami</p>
+              </div>
+              <i class="fas fa-chevron-right text-slate-300 text-sm"></i>
+            </button>
+          </div>
+
+          <button onclick="handleLogout()" class="w-full py-3 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition font-bold text-sm border border-red-200">
+            <i class="fas fa-right-from-bracket mr-1.5"></i> Keluar dari Akun
+          </button>
+
+          <p class="text-center text-meta mt-5">Jaga Warga v1.0 · Dibuat untuk warga</p>
+        </div>
+      `;
+    }
+
+    function renderEditProfil(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Edit Profil', 0);
+      return `
+        <div class="fade-in">
+          <form onsubmit="event.preventDefault(); saveProfil(this);" class="space-y-4">
+            <div class="card text-center mb-4">
+              <div class="w-20 h-20 bg-primary rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-3">
+                <i class="fas fa-user"></i>
+              </div>
+              <button type="button" onclick="showToast('Fitur ganti foto (contoh)', 'info')" class="text-primary font-semibold text-sm">
+                <i class="fas fa-camera mr-1"></i> Ganti Foto Profil
+              </button>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Nama Lengkap</label>
+              <input name="name" required type="text" value="${user.name}" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Nomor HP</label>
+              <input name="phone" type="tel" placeholder="0812xxxxxxxx" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Alamat Lengkap</label>
+              <textarea name="alamat" rows="2" placeholder="Contoh: Jl. Melati No. 5, Blok C" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none resize-none text-sm"></textarea>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">RT / RW</label>
+              <input type="text" value="${user.rt} · ${user.rw}" disabled class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 text-sm">
+              <p class="text-meta mt-1"><i class="fas fa-info-circle"></i> RT/RW tidak bisa diubah. Hubungi pengurus jika perlu.</p>
+            </div>
+            <button type="submit" class="w-full py-3 rounded-lg bg-primary text-white hover:bg-primary-dark transition shadow-md shadow-orange-200 text-sm font-bold">
+              <i class="fas fa-save mr-1.5"></i> Simpan Perubahan
+            </button>
+          </form>
+        </div>
+      `;
+    }
+
+    function saveProfil(form) {
+      const user = getCurrentUser();
+      const fd = new FormData(form);
+      const newName = fd.get('name').trim();
+      if (!newName) { showToast('Nama tidak boleh kosong', 'warn'); return; }
+      user.name = newName;
+      setCurrentUser(user);
+      document.getElementById('headerSub').textContent = `${user.name} · ${user.rt} · ${user.rw}`;
+      showToast('Profil berhasil diperbarui');
+      setTimeout(() => gotoPage('profil'), 800);
+    }
+
+    // ================== HALAMAN: BUAT LAPORAN ==================
+    function renderBuatLaporan(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Buat Laporan', 0);
+      return `
+        <div class="fade-in">
+          <div class="card mb-4" style="background:#FFF7ED; border-color:#FFEDD5;">
+            <div class="flex items-start gap-2.5">
+              <i class="fas fa-circle-info text-primary mt-0.5"></i>
+              <div>
+                <p class="text-sm font-semibold text-orange-900">Laporan diterima Ketua ${user.rt}</p>
+                <p class="text-meta mt-0.5">Isi dengan jelas agar cepat ditangani.</p>
+              </div>
+            </div>
+          </div>
+
+          <form onsubmit="event.preventDefault(); submitReport(this);" class="space-y-4">
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">1. Apa masalahnya?</label>
+              <input name="judul" required type="text" placeholder="Contoh: Lampu jalan mati" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">2. Jenis masalah</label>
+              <select name="kategori" required class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none bg-white text-sm">
+                <option value="">-- Pilih jenis --</option>
+                <option>Fasilitas Umum</option>
+                <option>Kebersihan</option>
+                <option>Keamanan</option>
+                <option>Infrastruktur</option>
+                <option>Sosial</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">3. Seberapa mendesak?</label>
+              <select name="urgensi" required class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none bg-white text-sm">
+                <option value="">-- Pilih tingkat --</option>
+                <option>Rendah</option>
+                <option>Sedang</option>
+                <option>Tinggi</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">4. Di mana lokasinya?</label>
+              <input name="lokasi" required type="text" placeholder="Contoh: Depan rumah Blok C No. 5" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">5. Jelaskan lebih detail</label>
+              <textarea name="deskripsi" required rows="4" placeholder="Contoh: Lampu mati sudah 2 hari, jalan jadi gelap..." class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none resize-none text-sm"></textarea>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">6. Lampirkan foto (opsional)</label>
+              <div class="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center cursor-pointer hover:border-primary hover:bg-primary-soft transition" onclick="showToast('Foto dilampirkan (contoh)', 'info')">
+                <i class="fas fa-camera text-2xl text-primary mb-1.5"></i>
+                <p class="text-sm font-semibold">Ketuk untuk ambil foto</p>
+                <p class="text-meta mt-0.5">Atau pilih dari galeri</p>
+              </div>
+            </div>
+            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input name="anonim" type="checkbox" class="w-5 h-5 accent-primary mt-0.5 flex-shrink-0">
+                <div>
+                  <span class="text-sm font-semibold"><i class="fas fa-user-secret text-purple-500 mr-1"></i> Kirim sebagai anonim</span>
+                  <p class="text-meta mt-0.5">Nama Anda tidak akan ditampilkan.</p>
+                </div>
+              </label>
+            </div>
+            <button type="submit" class="w-full py-3 rounded-lg bg-primary text-white hover:bg-primary-dark transition shadow-md shadow-orange-200 text-sm font-bold">
+              <i class="fas fa-paper-plane mr-1.5"></i> Kirim Laporan
+            </button>
+          </form>
+        </div>
+      `;
+    }
+
+    function submitReport(form) {
+      const user = getCurrentUser();
+      const fd = new FormData(form);
+      const id = 'RPT-' + String(reports.length + 1).padStart(3,'0');
+      reports.unshift({
+        id, judul: fd.get('judul'), kategori: fd.get('kategori'),
+        urgensi: fd.get('urgensi'), lokasi: fd.get('lokasi'),
+        deskripsi: fd.get('deskripsi'),
+        anonim: fd.get('anonim') === 'on',
+        pelapor: fd.get('anonim') === 'on' ? 'Anonim' : user.name,
+        tanggal:'Hari ini', rt:user.rt, rw:user.rw,
+        status:'Menunggu Verifikasi RT', eskalasi:false
+      });
+      saveAll();
+      showToast(`Laporan terkirim ke Ketua ${user.rt}`);
+      setTimeout(() => gotoPage('cekStatus'), 800);
+    }
+
+    // ================== HALAMAN: CEK STATUS ==================
+    function renderCekStatus(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Status Laporan', 0);
+      const my = reports.filter(r => r.rt === user.rt);
+      return `
+        <div class="fade-in">
+          <div class="card mb-4" style="background:#EFF6FF; border-color:#BFDBFE;">
+            <p class="text-sm text-blue-800"><i class="fas fa-lightbulb"></i> Laporan Anda melewati 4 tahap: Diterima → Verifikasi RT → Ditangani → Selesai.</p>
+          </div>
+
+          ${my.length === 0 ? `
+            <div class="card text-center py-10">
+              <i class="fas fa-inbox text-4xl text-slate-300 mb-3"></i>
+              <p class="text-sm font-semibold text-slate-500">Belum ada laporan</p>
+              <button onclick="gotoPage('buatLaporan')" class="mt-4 px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-bold">
+                <i class="fas fa-plus mr-1"></i> Buat Laporan
+              </button>
+            </div>
+          ` : ''}
+
+          ${my.map(r => `
+            <div class="card mb-3">
+              <div class="flex flex-wrap justify-between items-start gap-2 mb-2.5">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5 flex-wrap mb-0.5">
+                    <h3 class="title-card">${r.judul}</h3>
+                    ${r.anonim ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200"><i class="fas fa-user-secret"></i> Anonim</span>' : ''}
+                  </div>
+                  <p class="text-meta">${r.tanggal} · ${r.kategori}</p>
+                </div>
+                ${badgeUrgensi(r.urgensi)}
+              </div>
+              <div class="mb-2.5">${badgeStatus(r.status)}</div>
+              <p class="text-body text-slate-600">${r.deskripsi}</p>
+
+              <div class="mt-4">
+                <div class="flex items-start justify-between gap-1">
+                  ${['Diterima','Verifikasi RT','Ditangani','Selesai'].map((step, i) => {
+                    const steps = ['Menunggu Verifikasi RT','Sedang Diproses RT','Sedang Ditangani','Selesai'];
+                    const idx = steps.indexOf(r.status);
+                    const active = i <= idx;
+                    return `
+                      <div class="flex flex-col items-center flex-1 min-w-0">
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${active ? 'bg-primary text-white' : 'bg-slate-200 text-slate-400'}">
+                          ${active ? '<i class="fas fa-check text-[10px]"></i>' : i+1}
+                        </div>
+                        <span class="text-[10px] text-center mt-1 ${active ? 'text-primary font-semibold' : 'text-slate-400'} leading-tight">${step}</span>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // ================== HALAMAN: PENGUMUMAN ==================
+    function renderPengumumanWarga(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Pengumuman', 0);
+      const my = broadcastList.filter(b =>
+        (b.target === 'RW' && b.rw === user.rw) ||
+        (b.target === 'RT' && b.rt === user.rt)
+      );
+      return `
+        <div class="fade-in">
+          <p class="text-meta mb-4">Info dari ${user.rt} dan ${user.rw}. Ketuk untuk lihat detail.</p>
+          ${my.length === 0 ? `
+            <div class="card text-center py-10">
+              <i class="fas fa-bullhorn text-4xl text-slate-300 mb-3"></i>
+              <p class="text-sm font-semibold text-slate-500">Belum ada pengumuman</p>
+            </div>
+          ` : ''}
+          ${my.map(b => `
+            <button onclick="gotoDetailPengumuman(${b.id})" class="card mb-2.5 w-full text-left hover:border-primary transition cursor-pointer">
+              <div class="flex items-start gap-3">
+                ${b.gambar ? `
+                  <img src="${b.gambar}" alt="" class="w-16 h-16 rounded-xl object-cover flex-shrink-0 bg-slate-100">
+                ` : `
+                  <div class="w-16 h-16 ${b.target === 'RT' ? 'bg-blue-50 text-blue-600' : 'bg-primary-soft text-primary'} rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-bullhorn text-xl"></i>
+                  </div>
+                `}
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5 flex-wrap mb-0.5">
+                    <h3 class="title-card truncate">${b.judul}</h3>
+                    <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded ${b.target === 'RT' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'}">
+                      ${b.target === 'RT' ? b.rt : b.rw}
+                    </span>
+                  </div>
+                  <p class="text-meta mb-1">${b.tanggal} · ${b.pembuat}</p>
+                  <p class="text-body text-slate-600 line-clamp-2">${b.pesan}</p>
+                </div>
+                <i class="fas fa-chevron-right text-slate-300 text-sm mt-1"></i>
+              </div>
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function gotoDetailPengumuman(id) {
+      currentPengumumanId = id;
+      gotoPage('detailPengumuman');
+    }
+
+    function renderDetailPengumuman(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Detail Pengumuman', 0);
+      const b = broadcastList.find(x => x.id === currentPengumumanId);
+      if (!b) {
+        return `<div class="card text-center py-10">
+          <i class="fas fa-circle-exclamation text-4xl text-slate-300 mb-3"></i>
+          <p class="text-sm font-semibold text-slate-500">Pengumuman tidak ditemukan</p>
+        </div>`;
+      }
+
+      return `
+        <div class="fade-in">
+          ${b.gambar ? `
+            <div class="rounded-2xl overflow-hidden mb-4 bg-slate-100" style="aspect-ratio: 16/9;">
+              <img src="${b.gambar}" alt="${b.judul}" class="w-full h-full object-cover">
+            </div>
+          ` : ''}
+
+          <div class="card mb-4">
+            <div class="flex items-center gap-1.5 flex-wrap mb-2">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${b.target === 'RT' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}">
+                <i class="fas fa-bullhorn mr-0.5"></i>
+                ${b.target === 'RT' ? 'Dari ' + b.rt : 'Dari ' + b.rw}
+              </span>
+            </div>
+            <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 leading-tight mb-2">${b.judul}</h1>
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-meta mb-4">
+              <span><i class="far fa-calendar mr-1"></i>${b.tanggal}</span>
+              <span><i class="far fa-user mr-1"></i>${b.pembuat}</span>
+            </div>
+            <div class="border-t border-slate-100 pt-4">
+              <p class="text-body text-slate-700 leading-relaxed whitespace-pre-line">${b.pesan}</p>
+            </div>
+          </div>
+
+          ${b.jadwal && b.jadwal.length > 0 ? `
+            <div class="card mb-4">
+              <h2 class="title-section mb-3 flex items-center gap-2">
+                <i class="fas fa-calendar-day text-primary"></i> Jadwal Kegiatan
+              </h2>
+              <div class="space-y-2">
+                ${b.jadwal.map((j, i) => `
+                  <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                    <div class="w-10 h-10 bg-primary-soft text-primary rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                      ${i+1}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-bold text-slate-900">${j.waktu}</p>
+                      <p class="text-body text-slate-600 mt-0.5">${j.kegiatan}</p>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="goBack()" class="py-3 rounded-lg border border-slate-200 font-semibold text-sm text-slate-700 hover:bg-slate-50 transition">
+              <i class="fas fa-arrow-left mr-1"></i> Kembali
+            </button>
+            <button onclick="showToast('Ditandai sebagai penting', 'info')" class="py-3 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition">
+              <i class="fas fa-bookmark mr-1"></i> Simpan
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // ================== HALAMAN: DARURAT ==================
+    function renderDarurat(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Tombol Darurat', 0);
+      return `
+        <div class="fade-in">
+          <div class="card mb-4" style="background:#FEF2F2; border-color:#FECACA;">
+            <div class="flex items-start gap-2.5">
+              <i class="fas fa-exclamation-triangle text-red-500 text-xl mt-0.5"></i>
+              <div>
+                <p class="text-sm font-bold text-red-700">Hanya untuk situasi darurat</p>
+                <p class="text-meta mt-0.5">Kebakaran, pencurian, medis, atau bahaya lain yang butuh bantuan segera.</p>
+              </div>
+            </div>
+          </div>
+
+          <h2 class="title-section mb-3">Pilih jenis darurat:</h2>
+          <div class="grid grid-cols-2 gap-2.5 mb-4">
+            <button onclick="activatePanic('Kebakaran')" class="card text-center hover:border-primary transition">
+              <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-red-600 text-xl mx-auto mb-2">
+                <i class="fas fa-fire"></i>
+              </div>
+              <p class="title-card">Kebakaran</p>
+            </button>
+            <button onclick="activatePanic('Medis')" class="card text-center hover:border-primary transition">
+              <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-red-600 text-xl mx-auto mb-2">
+                <i class="fas fa-ambulance"></i>
+              </div>
+              <p class="title-card">Medis</p>
+            </button>
+            <button onclick="activatePanic('Kriminal')" class="card text-center hover:border-primary transition">
+              <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-red-600 text-xl mx-auto mb-2">
+                <i class="fas fa-user-shield"></i>
+              </div>
+              <p class="title-card">Kriminal</p>
+            </button>
+            <button onclick="activatePanic('Lainnya')" class="card text-center hover:border-primary transition">
+              <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-red-600 text-xl mx-auto mb-2">
+                <i class="fas fa-hands-helping"></i>
+              </div>
+              <p class="title-card">Lainnya</p>
+            </button>
+          </div>
+
+          <button onclick="gotoPage('riwayatDarurat')" class="w-full py-3 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold text-sm text-slate-700 mb-3">
+            <i class="fas fa-history mr-1"></i> Riwayat Darurat
+          </button>
+
+          <div class="card" style="background:#FFF7ED; border-color:#FFEDD5;">
+            <p class="title-card mb-2.5"><i class="fas fa-phone text-primary mr-1"></i> Kontak Penting</p>
+            <div class="space-y-1.5 text-sm">
+              <div class="flex justify-between"><span class="text-slate-600">Pos Ronda</span><strong>0812-3456-7890</strong></div>
+              <div class="flex justify-between"><span class="text-slate-600">Ambulans</span><strong>119</strong></div>
+              <div class="flex justify-between"><span class="text-slate-600">Polisi</span><strong>110</strong></div>
+              <div class="flex justify-between"><span class="text-slate-600">Pemadam</span><strong>113</strong></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function activatePanic(jenis) {
+      openModal(
+        `Darurat: ${jenis}`,
+        `Aktifkan sirine dan kirim sinyal darurat ke Ketua ${getCurrentUser().rt} & pos ronda?`,
+        () => {
+          const sirene = document.getElementById('sirene');
+          if (sirene) { sirene.loop = true; sirene.play().catch(()=>{}); }
+          if (navigator.vibrate) navigator.vibrate([500,200,500,200,1000]);
+          const user = getCurrentUser();
+          panicLogs.unshift({
+            id:'PANIC-'+Date.now(),
+            jenis, user:user.name, rt:user.rt, rw:user.rw,
+            waktu: new Date().toLocaleString('id-ID')
+          });
+          saveAll();
+          showToast(`Sinyal ${jenis} terkirim!`, 'warn');
+          setTimeout(() => {
+            if (sirene) { sirene.pause(); sirene.currentTime = 0; }
+          }, 6000);
+        }
+      );
+    }
+
+    function renderRiwayatDarurat(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Riwayat Darurat', 0);
+      const my = panicLogs.filter(p => p.rt === user.rt || user.role === 'rw');
+      return `
+        <div class="fade-in">
+          <p class="text-meta mb-4">Catatan darurat yang pernah dikirim.</p>
+          ${my.length === 0 ? `
+            <div class="card text-center py-10">
+              <i class="fas fa-shield-heart text-4xl text-slate-300 mb-3"></i>
+              <p class="text-sm font-semibold text-slate-500">Belum ada riwayat darurat</p>
+            </div>
+          ` : ''}
+          ${my.map(p => `
+            <div class="card mb-2.5">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="title-card">${p.jenis || 'Darurat'}</p>
+                  <p class="text-meta mt-0.5">${p.waktu} · ${p.user} (${p.rt})</p>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // ================== HALAMAN: KELOLA LAPORAN (RT) ==================
+    function renderKelolaLaporan(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = `Kelola Laporan ${user.rt}`, 0);
+      const my = reports.filter(r => r.rt === user.rt);
+      return `
+        <div class="fade-in">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
+            ${[
+              { label:'Total', v:my.length, c:'bg-orange-50 text-orange-600', i:'fa-file-lines' },
+              { label:'Perlu Dicek', v:my.filter(r=>r.status==='Menunggu Verifikasi RT').length, c:'bg-amber-50 text-amber-600', i:'fa-clock' },
+              { label:'Diproses', v:my.filter(r=>r.status==='Sedang Diproses RT'||r.status==='Sedang Ditangani').length, c:'bg-indigo-50 text-indigo-600', i:'fa-screwdriver-wrench' },
+              { label:'Selesai', v:my.filter(r=>r.status==='Selesai').length, c:'bg-green-50 text-green-600', i:'fa-circle-check' }
+            ].map(s => `
+              <div class="card">
+                <div class="w-8 h-8 rounded-lg ${s.c} flex items-center justify-center mb-1.5 text-sm">
+                  <i class="fas ${s.i}"></i>
+                </div>
+                <p class="text-xl font-extrabold leading-none text-slate-900">${s.v}</p>
+                <p class="text-meta mt-1">${s.label}</p>
+              </div>
+            `).join('')}
+          </div>
+
+          ${my.length === 0 ? `
+            <div class="card text-center py-10">
+              <i class="fas fa-inbox text-4xl text-slate-300 mb-3"></i>
+              <p class="text-sm font-semibold text-slate-500">Belum ada laporan</p>
+            </div>
+          ` : ''}
+
+          ${my.map(r => `
+            <div class="card mb-3">
+              <div class="flex flex-wrap justify-between items-start gap-2 mb-2.5">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5 flex-wrap mb-0.5">
+                    <h3 class="title-card">${r.judul}</h3>
+                    ${r.anonim ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200"><i class="fas fa-user-secret"></i> Anonim</span>' : ''}
+                  </div>
+                  <p class="text-meta">${r.id} · ${r.pelapor} · ${r.tanggal}</p>
+                  <p class="text-meta mt-0.5"><i class="fas fa-map-marker-alt"></i> ${r.lokasi}</p>
+                </div>
+                ${badgeUrgensi(r.urgensi)}
+              </div>
+              <div class="mb-2.5">${badgeStatus(r.status)}</div>
+              <p class="text-body text-slate-600 mb-3">${r.deskripsi}</p>
+              <div class="grid grid-cols-2 gap-2">
+                ${r.status === 'Menunggu Verifikasi RT' ? `
+                  <button onclick="verifyReport('${r.id}')" class="py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm"><i class="fas fa-check mr-1"></i> Verifikasi</button>
+                  <button onclick="escalateReport('${r.id}')" class="py-2.5 rounded-lg bg-primary text-white font-semibold text-sm"><i class="fas fa-arrow-up mr-1"></i> Ke RW</button>
+                ` : ''}
+                ${r.status === 'Sedang Diproses RT' ? `
+                  <button onclick="handleReport('${r.id}')" class="py-2.5 rounded-lg bg-indigo-500 text-white font-semibold text-sm"><i class="fas fa-screwdriver-wrench mr-1"></i> Tangani</button>
+                  <button onclick="escalateReport('${r.id}')" class="py-2.5 rounded-lg bg-primary text-white font-semibold text-sm"><i class="fas fa-arrow-up mr-1"></i> Ke RW</button>
+                ` : ''}
+                ${r.status === 'Sedang Ditangani' ? `
+                  <button onclick="finishReport('${r.id}')" class="col-span-2 py-2.5 rounded-lg bg-green-500 text-white font-semibold text-sm"><i class="fas fa-check-double mr-1"></i> Tandai Selesai</button>
+                ` : ''}
+                ${r.status === 'Selesai' ? `
+                  <div class="col-span-2 text-center py-1.5 text-green-600 font-semibold text-sm"><i class="fas fa-circle-check mr-1"></i> Selesai</div>
+                ` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function verifyReport(id) { const r=reports.find(x=>x.id===id); if(r){r.status='Sedang Diproses RT'; saveAll(); showToast('Laporan diverifikasi'); render();} }
+    function escalateReport(id) { const r=reports.find(x=>x.id===id); if(r){r.status='Sedang Diproses RT'; r.eskalasi=true; saveAll(); showToast('Diteruskan ke RW','info'); render();} }
+    function handleReport(id) { const r=reports.find(x=>x.id===id); if(r){r.status='Sedang Ditangani'; saveAll(); showToast('Sedang ditangani'); render();} }
+    function finishReport(id) { const r=reports.find(x=>x.id===id); if(r){r.status='Selesai'; saveAll(); showToast('Laporan selesai','check'); render();} }
+
+    // ================== HALAMAN: BUAT PENGUMUMAN ==================
+    function renderBuatPengumuman(user) {
+      const targetLabel = user.role === 'rt' ? `Warga ${user.rt}` : `Semua Warga ${user.rw}`;
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Buat Pengumuman', 0);
+      return `
+        <div class="fade-in">
+          <div class="card mb-4" style="background:#FFF7ED; border-color:#FFEDD5;">
+            <p class="text-sm text-orange-900"><i class="fas fa-bullhorn text-primary mr-1"></i> Pengumuman akan dikirim ke <strong>${targetLabel}</strong>.</p>
+          </div>
+
+          <form onsubmit="event.preventDefault(); submitPengumuman(this);" class="space-y-4">
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Judul Pengumuman</label>
+              <input name="judul" required type="text" placeholder="Contoh: Kerja Bakti Minggu Ini" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Isi Pengumuman</label>
+              <textarea name="pesan" required rows="5" placeholder="Tulis isi pengumuman..." class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none resize-none text-sm"></textarea>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Gambar / Poster (opsional)</label>
+              <input name="gambar" type="url" placeholder="https://..." class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm mb-2">
+              <div class="border-2 border-dashed border-slate-200 rounded-xl p-3 text-center cursor-pointer hover:border-primary hover:bg-primary-soft transition" onclick="showToast('Upload gambar (contoh)', 'info')">
+                <i class="fas fa-image text-xl text-primary mb-1"></i>
+                <p class="text-xs text-slate-500">Ketuk untuk ambil foto / pilih dari galeri</p>
+              </div>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Jadwal Kegiatan (opsional)</label>
+              <div id="jadwalContainer" class="space-y-2 mb-2">
+                <div class="flex gap-2 jadwal-row">
+                  <input type="text" placeholder="Waktu" class="jadwal-waktu flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm">
+                  <input type="text" placeholder="Kegiatan" class="jadwal-kegiatan flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm">
+                  <button type="button" onclick="this.parentElement.remove()" class="w-10 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <button type="button" onclick="addJadwalRow()" class="w-full py-2 rounded-lg border border-dashed border-slate-300 text-slate-500 text-xs font-semibold hover:border-primary hover:text-primary transition">
+                <i class="fas fa-plus mr-1"></i> Tambah Baris Jadwal
+              </button>
+            </div>
+            <button type="submit" class="w-full py-3 rounded-lg bg-primary text-white hover:bg-primary-dark transition shadow-md shadow-orange-200 text-sm font-bold">
+              <i class="fas fa-paper-plane mr-1.5"></i> Kirim Pengumuman
+            </button>
+          </form>
+
+          <div class="mt-5">
+            <h3 class="title-section mb-2.5">Riwayat pengumuman Anda:</h3>
+            ${broadcastList.filter(b => b.pembuat === user.name).map(b => `
+              <div class="card mb-2">
+                <p class="title-card">${b.judul}</p>
+                <p class="text-meta mt-0.5">${b.tanggal} · ke ${b.target === 'RT' ? b.rt : b.rw}</p>
+              </div>
+            `).join('') || '<p class="text-meta">Belum ada.</p>'}
+          </div>
+        </div>
+      `;
+    }
+
+    function addJadwalRow() {
+      const container = document.getElementById('jadwalContainer');
+      const div = document.createElement('div');
+      div.className = 'flex gap-2 jadwal-row';
+      div.innerHTML = `
+        <input type="text" placeholder="Waktu" class="jadwal-waktu flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm">
+        <input type="text" placeholder="Kegiatan" class="jadwal-kegiatan flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm">
+        <button type="button" onclick="this.parentElement.remove()" class="w-10 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      container.appendChild(div);
+    }
+
+    function submitPengumuman(form) {
+      const user = getCurrentUser();
+      const fd = new FormData(form);
+      const jadwal = [];
+      document.querySelectorAll('.jadwal-row').forEach(row => {
+        const waktu = row.querySelector('.jadwal-waktu').value.trim();
+        const kegiatan = row.querySelector('.jadwal-kegiatan').value.trim();
+        if (waktu && kegiatan) jadwal.push({ waktu, kegiatan });
+      });
+
+      broadcastList.unshift({
+        id: Date.now(),
+        judul: fd.get('judul'),
+        pesan: fd.get('pesan'),
+        gambar: fd.get('gambar') || null,
+        jadwal: jadwal,
+        tanggal: 'Hari ini',
+        target: user.role === 'rt' ? 'RT' : 'RW',
+        rt: user.role === 'rt' ? user.rt : '-',
+        rw: user.rw,
+        pembuat: user.name
+      });
+      saveAll();
+      showToast(`Pengumuman terkirim ke ${user.role === 'rt' ? 'warga ' + user.rt : 'semua warga ' + user.rw}`);
+      setTimeout(() => gotoPage('dashboard'), 800);
+    }
+
+    // ================== HALAMAN: PROXY REPORT ==================
+    function renderProxyReport(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Bantu Input Laporan', 0);
+      return `
+        <div class="fade-in">
+          <div class="card mb-4" style="background:#ECFDF5; border-color:#A7F3D0;">
+            <p class="text-sm text-green-800"><i class="fas fa-people-arrows text-green-600 mr-1"></i> Gunakan halaman ini untuk membantu warga lansia atau yang tidak punya HP membuat laporan.</p>
+          </div>
+
+          <form onsubmit="event.preventDefault(); submitProxy(this);" class="space-y-4">
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Nama warga yang dilaporkan</label>
+              <input name="namaWarga" required type="text" placeholder="Contoh: Mbah Sutrisno" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Judul laporan</label>
+              <input name="judul" required type="text" placeholder="Contoh: Saluran air tersumbat" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Jenis masalah</label>
+              <select name="kategori" required class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-sm">
+                <option value="">-- Pilih --</option>
+                <option>Fasilitas Umum</option><option>Kebersihan</option>
+                <option>Keamanan</option><option>Infrastruktur</option><option>Sosial</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Lokasi</label>
+              <input name="lokasi" required type="text" placeholder="Contoh: Depan rumah Mbah Sutrisno" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none text-sm">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1.5 text-sm text-slate-700">Cerita dari warga</label>
+              <textarea name="deskripsi" required rows="4" placeholder="Tulis apa yang disampaikan warga..." class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:border-primary outline-none resize-none text-sm"></textarea>
+            </div>
+            <button type="submit" class="w-full py-3 rounded-lg bg-primary text-white hover:bg-primary-dark transition text-sm font-bold">
+              <i class="fas fa-save mr-1.5"></i> Simpan Laporan
+            </button>
+          </form>
+        </div>
+      `;
+    }
+
+    function submitProxy(form) {
+      const user = getCurrentUser();
+      const fd = new FormData(form);
+      reports.unshift({
+        id: 'RPT-' + String(reports.length + 1).padStart(3,'0'),
+        judul: fd.get('judul'), kategori: fd.get('kategori'),
+        urgensi: 'Sedang', lokasi: fd.get('lokasi'),
+        deskripsi: fd.get('deskripsi'),
+        status: 'Menunggu Verifikasi RT',
+        anonim: false, pelapor: fd.get('namaWarga') + ' (via ' + user.name + ')',
+        tanggal: 'Hari ini', rt: user.rt, rw: user.rw, eskalasi: false
+      });
+      saveAll();
+      showToast('Laporan berhasil disimpan');
+      setTimeout(() => gotoPage('kelolaLaporan'), 800);
+    }
+
+    // ================== HALAMAN: LAPORAN ESKALASI (RW) ==================
+    function renderLaporanEskalasi(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Laporan dari RT', 0);
+      const rwRep = reports.filter(r => r.rw === user.rw);
+      const escal = rwRep.filter(r => r.eskalasi && r.status !== 'Selesai');
+      return `
+        <div class="fade-in">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
+            ${[
+              { label:'Total RW', v:rwRep.length, c:'bg-orange-50 text-orange-600', i:'fa-file-lines' },
+              { label:'Dari RT', v:escal.length, c:'bg-red-50 text-red-600', i:'fa-arrow-up' },
+              { label:'Selesai', v:rwRep.filter(r=>r.status==='Selesai').length, c:'bg-green-50 text-green-600', i:'fa-circle-check' },
+              { label:'Respons', v:'2.4hr', c:'bg-blue-50 text-blue-600', i:'fa-clock' }
+            ].map(s => `
+              <div class="card">
+                <div class="w-8 h-8 rounded-lg ${s.c} flex items-center justify-center mb-1.5 text-sm"><i class="fas ${s.i}"></i></div>
+                <p class="text-xl font-extrabold leading-none text-slate-900">${s.v}</p>
+                <p class="text-meta mt-1">${s.label}</p>
+              </div>
+            `).join('')}
+          </div>
+
+          ${escal.length === 0 ? `
+            <div class="card text-center py-10">
+              <i class="fas fa-check-circle text-4xl text-green-400 mb-3"></i>
+              <p class="text-sm font-semibold text-slate-500">Tidak ada laporan eskalasi</p>
+            </div>
+          ` : ''}
+
+          ${escal.map(r => `
+            <div class="card mb-3">
+              <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
+                <div>
+                  <h3 class="title-card">${r.judul}</h3>
+                  <p class="text-meta mt-0.5">${r.id} · ${r.rt} · ${r.tanggal}</p>
+                </div>
+                ${badgeUrgensi(r.urgensi)}
+              </div>
+              <div class="mb-2.5">${badgeStatus(r.status)}</div>
+              <p class="text-body text-slate-600 mb-3">${r.deskripsi}</p>
+              <div class="grid grid-cols-2 gap-2">
+                <button onclick="showToast('Laporan ditindaklanjuti')" class="py-2.5 rounded-lg bg-primary text-white font-semibold text-sm"><i class="fas fa-play mr-1"></i> Tindak Lanjut</button>
+                <button onclick="showToast('Dikembalikan ke RT','warn')" class="py-2.5 rounded-lg border border-slate-200 font-semibold text-sm">Kembalikan</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // ================== HALAMAN: ARSIP DOKUMEN ==================
+    function renderArsipDokumen(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Arsip Dokumen', 0);
+      return `
+        <div class="fade-in">
+          <p class="text-meta mb-4">SOP, aturan, dan solusi masalah yang pernah ditangani.</p>
+          ${knowledgeRepo.map(k => `
+            <div class="card mb-2.5 cursor-pointer hover:border-primary transition" onclick="showToast('Membuka: ${k.judul}', 'info')">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 ${
+                  k.tipe === 'SOP' ? 'bg-blue-50 text-blue-600' :
+                  k.tipe === 'Regulasi' ? 'bg-purple-50 text-purple-600' :
+                  'bg-green-50 text-green-600'
+                } rounded-xl flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5 mb-0.5">
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      k.tipe === 'SOP' ? 'bg-blue-50 text-blue-700' :
+                      k.tipe === 'Regulasi' ? 'bg-purple-50 text-purple-700' :
+                      'bg-green-50 text-green-700'
+                    }">${k.tipe}</span>
+                    <span class="text-meta">${k.tanggal}</span>
+                  </div>
+                  <h3 class="title-card">${k.judul}</h3>
+                  <p class="text-meta mt-0.5">${k.deskripsi}</p>
+                </div>
+                <i class="fas fa-chevron-right text-slate-300 text-sm"></i>
+              </div>
+            </div>
+          `).join('')}
+          ${user.role === 'rw' ? `
+            <button onclick="addRepoPrompt()" class="w-full py-3 rounded-lg border-2 border-dashed border-slate-300 text-slate-500 font-semibold text-sm hover:border-primary hover:text-primary transition">
+              <i class="fas fa-plus mr-1"></i> Tambah Dokumen
+            </button>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function addRepoPrompt() {
+      const judul = prompt('Judul dokumen:');
+      if (!judul) return;
+      const tipe = prompt('Jenis (SOP / Regulasi / FAQ):', 'SOP') || 'SOP';
+      knowledgeRepo.unshift({
+        id: tipe.toUpperCase().slice(0,3) + '-' + Date.now(),
+        judul, tipe, tanggal:'Hari ini', deskripsi:'Dokumen baru ditambahkan.'
+      });
+      saveAll();
+      showToast('Dokumen tersimpan');
+      render();
+    }
+
+    // ================== HALAMAN: KINERJA RT (RW) ==================
+    function renderKinerjaRT(user) {
+      setTimeout(() => document.getElementById('pageTitle').textContent = 'Kinerja RT', 0);
+      return `
+        <div class="fade-in">
+          <p class="text-meta mb-4">Seberapa cepat setiap RT menangani laporan warga.</p>
+          ${[
+            { rt:'RT 01', val:85, selesai:12, total:14 },
+            { rt:'RT 03', val:72, selesai:8, total:11 },
+            { rt:'RT 05', val:60, selesai:6, total:10 }
+          ].map(a => `
+            <div class="card mb-2.5">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="title-card">${a.rt}</h3>
+                <span class="text-primary font-extrabold text-base">${a.val}%</span>
+              </div>
+              <div class="h-2 bg-slate-100 rounded-full overflow-hidden mb-2">
+                <div class="h-full bg-primary rounded-full" style="width:${a.val}%"></div>
+              </div>
+              <p class="text-meta">${a.selesai} dari ${a.total} laporan selesai</p>
+            </div>
+          `).join('')}
+          <div class="card text-center mt-4">
+            <p class="text-meta">Nilai Kepatuhan ${user.rw}</p>
+            <p class="text-3xl font-extrabold text-primary mt-1">78<span class="text-base text-slate-400">/100</span></p>
+          </div>
+        </div>
+      `;
+    }
+
+    // ================== INIT ==================
+    window.addEventListener('DOMContentLoaded', () => {
+      const user = getCurrentUser();
+      if (user) {
+        document.getElementById('page-auth').classList.add('hidden');
+        document.getElementById('page-dashboard').classList.remove('hidden');
+        document.getElementById('headerSub').textContent = `${user.name} · ${user.rt} · ${user.rw}`;
+        currentPage = 'dashboard';
+        render();
+      }
+    });
+  </script>
+</body>
+</html>
